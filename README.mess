@@ -1,0 +1,4 @@
+# About
+This is an implementation of a least-recently-used cache datastructure, useful for tracking a limited set of resource allocations with minimal evictions.
+
+See ``lru-cache``, ``make-lru-cache``, etc.
