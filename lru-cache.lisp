@@ -191,5 +191,6 @@
                          (declare (ignorable ,id))
                          ,@body))
                       (T
-                       (return ,result))))
-           until (eq ,tail ,node))))
+                       (loop-finish))))
+           until (eq ,tail ,node)
+           finally (return ,result))))
