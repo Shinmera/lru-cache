@@ -89,7 +89,7 @@ This operation is O(n).
 
 See LRU-CACHE")
 
-  (fuunction lru-cache-count
+  (function lru-cache-count
     "Counts the number of elements currently in the cache.
 
 This operation is O(n).
