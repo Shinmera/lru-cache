@@ -32,7 +32,11 @@
 
 (defmethod print-object ((node lru-cache-node) stream)
   (print-unreadable-object (node stream :type T :identity T)
-    (format stream "~a" (lru-cache-node-value node))))
+    (format stream "~a [L ~d] ~d [R ~d]" 
+            (lru-cache-node-value node)
+            (lru-cache-node-id (lru-cache-node-left node))
+            (lru-cache-node-id node)
+            (lru-cache-node-id (lru-cache-node-right node)))))
 
 (defstruct (lru-cache
             (:constructor %make-lru-cache (head table size))
@@ -51,21 +55,19 @@
   (loop with tail = (lru-cache-node-left (lru-cache-head cache))
         for i from 0
         for node = (lru-cache-head cache) then (lru-cache-node-right node)
-        for value = (lru-cache-node-value node)
-        until (eq node tail)
-        do (when value
-             (format stream "~3d ~a~%" (lru-cache-node-id node) value))))
+        do (format stream "~a~%" node)
+        until (eq node tail)))
 
-(defun make-lru-cache (size)
+(defun make-lru-cache (size &optional (test 'eql))
   (check-type size (integer 1))
   (let ((head (make-lru-cache-node NIL NIL 0)))
     (setf (lru-cache-node-left head) head)
     (setf (lru-cache-node-right head) head)
     (loop for i from 1 below size
-          for node = (make-lru-cache-node head (lru-cache-node-right head) i)
+          for node = (make-lru-cache-node (lru-cache-node-left head) head i)
           do (setf (lru-cache-node-right (lru-cache-node-left head)) node)
              (setf (lru-cache-node-left head) node))
-    (%make-lru-cache head (make-hash-table :test 'eq :size size) size)))
+    (%make-lru-cache head (make-hash-table :test test :size size) size)))
 
 (defun lru-cache-push (value cache)
   (declare (optimize speed (safety 1)))
@@ -76,10 +78,10 @@
     (cond ((null node)
            ;; Claim the oldest (left of the head) node and shift up
            (let ((prev (the lru-cache-node (lru-cache-node-left head))))
-             (setf (lru-cache-node-value prev) value)
-             (setf (lru-cache-head cache) prev)
              (when (lru-cache-node-value prev)
                (remhash (lru-cache-node-value prev) table))
+             (setf (lru-cache-node-value prev) value)
+             (setf (lru-cache-head cache) prev)
              (setf (gethash value table) prev)
              (lru-cache-node-id prev)))
           ((eq node head)
@@ -141,8 +143,8 @@
   (clrhash (lru-cache-table cache))
   (loop with tail = (lru-cache-node-left (lru-cache-head cache))
         for node = (lru-cache-head cache) then (lru-cache-node-right node)
-        until (eq tail node)
-        do (setf (lru-cache-node-value node) NIL))
+        do (setf (lru-cache-node-value node) NIL)
+        until (eq tail node))
   cache)
 
 (defun lru-cache-id (value cache)
@@ -157,8 +159,9 @@
   (declare (type lru-cache cache))
   (loop with tail = (lru-cache-node-left (lru-cache-head cache))
         for node = (lru-cache-head cache) then (lru-cache-node-right node)
-        until (or (eq tail node) (null (lru-cache-node-value node)))
-        count T))
+        until (null (lru-cache-node-value node))
+        count T
+        until (eq tail node)))
 
 (defun map-lru-cache (function cache)
   (declare (optimize speed (safety 1)))
@@ -169,10 +172,10 @@
                           (function function))
         for node = (lru-cache-head cache) then (lru-cache-node-right node)
         for value = (lru-cache-node-value node)
-        until (eq tail node)
         do (if value
                (funcall function value (lru-cache-node-id node))
-               (return)))
+               (return))
+        until (eq tail node))
   cache)
 
 (defmacro do-lru-cache ((element id cache &optional result) &body body)
@@ -182,11 +185,11 @@
     `(loop with ,cacheg = ,cache
            with ,tail of-type lru-cache-node = (lru-cache-node-left (lru-cache-head ,cacheg))
            for ,node of-type lru-cache-node = (lru-cache-head ,cacheg) then (lru-cache-node-right ,node)
-           until (eq ,tail ,node)
            do (let ((,element (lru-cache-node-value ,node)))
                 (cond (,element
-                       (let ((,id (lru-cache-node-id node)))
+                       (let ((,id (lru-cache-node-id ,node)))
                          (declare (ignorable ,id))
                          ,@body))
                       (T
-                       (return ,result)))))))
+                       (return ,result))))
+           until (eq ,tail ,node))))

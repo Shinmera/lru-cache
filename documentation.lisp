@@ -24,6 +24,10 @@ See DO-LRU-CACHE")
   (function make-lru-cache
     "Create a new LRU-CACHE instance that can hold SIZE elements.
 
+The TEST may be one of the arguments acceptable as the TEST of a
+hash-table.
+
+See CL:HASH-TABLE-TEST
 See LRU-CACHE")
 
   (function lru-cache-size
@@ -99,6 +103,8 @@ See LRU-CACHE-SIZE")
 Calls FUNCTION with two values: the element and the ID of the node the
 element occupies. Note that the ID does *not* necessarily correspond
 to the index of the node in the cache sequence.
+
+Returns the CACHE instance.
 
 See LRU-CACHE
 See DO-LRU-CACHE")

@@ -1,0 +1,55 @@
+#|
+ This file is a part of lru-cache
+ (c) 2023 Shirakumo http://tymoon.eu (shinmera@tymoon.eu)
+ Author: Nicolas Hafner <shinmera@tymoon.eu>
+|#
+
+(defpackage #:org.shirakumo.lru-cache.test
+  (:use #:cl #:parachute #:org.shirakumo.lru-cache)
+  (:export
+   #:lru-cache))
+
+(in-package #:org.shirakumo.lru-cache.test)
+
+(define-test lru-cache
+  (finish (make-lru-cache 3))
+  (is = 3 (lru-cache-size (make-lru-cache 3)))
+  (true (not (null (lru-cache-push :a (make-lru-cache 3)))))
+  (true (null (lru-cache-pop :a (make-lru-cache 3))))
+  (is eql NIL (lru-cache-id :a (make-lru-cache 3)))
+  (true (null (lru-cache-evict (make-lru-cache 3))))
+  (finish (lru-cache-clear (make-lru-cache 3)))
+  (is = 0 (lru-cache-count (make-lru-cache 3)))
+  (let ((cache (make-lru-cache 3)))
+    (finish (lru-cache-push :a cache))
+    (true (null (lru-cache-push :a cache)))
+    (true (lru-cache-id :a cache))
+    (is = 1 (lru-cache-count cache))
+    (true (not (null (lru-cache-pop :a cache))))
+    (is = 0 (lru-cache-count cache))
+    (finish (lru-cache-push :a cache))
+    (finish (lru-cache-push :b cache))
+    (finish (lru-cache-push :c cache))
+    (finish (lru-cache-push :d cache))
+    (is = 3 (lru-cache-count cache))
+    (is eql NIL (lru-cache-id :a cache))
+    (is eql :b (lru-cache-evict cache))
+    (is = 2 (lru-cache-count cache))
+    (finish (lru-cache-clear cache))
+    (is = 0 (lru-cache-count cache))
+    (finish (lru-cache-push :a cache))
+    (finish (lru-cache-push :b cache))
+    (finish (lru-cache-push :c cache))
+    (finish (lru-cache-push :d cache))
+    (let ((order '(:d :c :b)))
+      (map-lru-cache (lambda (element i)
+                       (declare (ignore i))
+                       (is eq (pop order) element))
+                     cache))
+    (let ((order '(:d :c :b)))
+      (do-lru-cache (element _ cache)
+        (is eq (pop order) element))))
+  (let ((cache (make-lru-cache 1 'equalp)))
+    (finish (lru-cache-push "a" cache))
+    (true (null (lru-cache-push "A" cache)))
+    (true (lru-cache-id "A" cache))))
