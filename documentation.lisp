@@ -11,6 +11,7 @@
     "A least-recently-used cache datastructure.
 
 See MAKE-LRU-CACHE
+See LRU-CACHE-RESIZE
 See LRU-CACHE-SIZE
 See LRU-CACHE-PUSH
 See LRU-CACHE-POP
@@ -19,7 +20,8 @@ See LRU-CACHE-EVICT
 See LRU-CACHE-CLEAR
 See LRU-CACHE-COUNT
 See MAP-LRU-CACHE
-See DO-LRU-CACHE")
+See DO-LRU-CACHE
+See LRU-CACHE-LIST")
 
   (function make-lru-cache
     "Create a new LRU-CACHE instance that can hold SIZE elements.
@@ -30,12 +32,31 @@ hash-table.
 See CL:HASH-TABLE-TEST
 See LRU-CACHE")
 
+  (function lru-cache-resize
+    "Change the size of the cache.
+
+When decreasing the cache size, elements are *not* evicted according
+to LRU order, and instead elements with the largest assigned ID are
+evicted in order. This is required to ensure that the IDs remain
+consecutive and consistent across multiple shrinkages and growths.
+
+If preserving LRU order is more important than preserving node IDs
+when shrinking, you should first coerce the cache to a sequence, then
+resize and reinsert in reverse order.
+
+This operation is O(n) for increasing the size and O(n^2) for
+decreasing the size.
+
+See LRU-CACHE
+See LRU-CACHE-SIZE")
+
   (function lru-cache-size
     "Returns the size of the cache.
 
 This operation is O(1).
 
-See LRU-CACHE")
+See LRU-CACHE
+See LRU-CACHE-RESIZE")
 
   (function lru-cache-push
     "Pushes an element to the cache.
@@ -114,6 +135,12 @@ See DO-LRU-CACHE")
 
 An implicit NIL block is bound around BODY.
 If BODY does not explicitly return, RESULT is evaluated and returned instead.
+
+See LRU-CACHE
+See MAP-LRU-CACHE")
+
+  (function lru-cache-list
+    "Returns a list of the elements in the cache in order of most recent to least recent.
 
 See LRU-CACHE
 See MAP-LRU-CACHE"))

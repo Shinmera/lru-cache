@@ -9,6 +9,7 @@
   (:export
    #:lru-cache
    #:make-lru-cache
+   #:lru-cache-resize
    #:lru-cache-size
    #:lru-cache-push
    #:lru-cache-pop
@@ -17,7 +18,8 @@
    #:lru-cache-clear
    #:lru-cache-count
    #:map-lru-cache
-   #:do-lru-cache))
+   #:do-lru-cache
+   #:lru-cache-list))
 
 (in-package #:org.shirakumo.lru-cache)
 
@@ -44,7 +46,7 @@
             (:copier NIL))
   (head NIL :type lru-cache-node)
   (table NIL :type hash-table)
-  (size 0 :type (unsigned-byte 32) :read-only T))
+  (size 0 :type (unsigned-byte 32)))
 
 (defmethod print-object ((cache lru-cache) stream)
   (print-unreadable-object (cache stream :type T :identity T)
@@ -68,6 +70,33 @@
           do (setf (lru-cache-node-right (lru-cache-node-left head)) node)
              (setf (lru-cache-node-left head) node))
     (%make-lru-cache head (make-hash-table :test test :size size) size)))
+
+(defun lru-cache-resize (cache size)
+  (declare (type lru-cache cache))
+  (check-type size (integer 1))
+  (let ((head (lru-cache-head cache)))
+    (cond ((< (lru-cache-size cache) size)
+           (loop for i from (lru-cache-size cache) below size
+                 for node of-type lru-cache-node = (make-lru-cache-node (lru-cache-node-left head) head i)
+                 do (setf (lru-cache-node-right (lru-cache-node-left head)) node)
+                    (setf (lru-cache-node-left head) node)))
+          ((< size (lru-cache-size cache))
+           ;; Find the element with the largest ID and evict it. We have to do this
+           ;; in order to preserve ID consistency.
+           (loop with table = (lru-cache-table cache)
+                 for id downfrom (1- (lru-cache-size cache)) above size
+                 for node = (loop for node of-type lru-cache-node = (lru-cache-node-left head) then (lru-cache-node-left node)
+                                  do (when (= id (lru-cache-node-id node))
+                                       (return node)))
+                 do (setf (lru-cache-node-right (lru-cache-node-left node)) (lru-cache-node-right node))
+                    (setf (lru-cache-node-left (lru-cache-node-right node)) (lru-cache-node-left node))
+                    (when (lru-cache-node-value node)
+                      (remhash (lru-cache-node-value node) table))
+                    (when (eq head node)
+                      (setf head (lru-cache-node-right node))
+                      (setf (lru-cache-head cache) head)))))
+    (setf (lru-cache-size cache) size)
+    cache))
 
 (defun lru-cache-push (value cache)
   (declare (optimize speed (safety 1)))
@@ -194,3 +223,8 @@
                        (loop-finish))))
            until (eq ,tail ,node)
            finally (return ,result))))
+
+(defun lru-cache-list (cache)
+  (let ((els ()))
+    (do-lru-cache (element _ cache (nreverse els))
+      (push element els))))
