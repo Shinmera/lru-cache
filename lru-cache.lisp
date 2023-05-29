@@ -50,7 +50,7 @@
 
 (defmethod print-object ((cache lru-cache) stream)
   (print-unreadable-object (cache stream :type T :identity T)
-    (format stream "~a" (lru-cache-size cache))))
+    (format stream "~d/~d" (lru-cache-count cache) (lru-cache-size cache))))
 
 (defmethod describe-object ((cache lru-cache) stream)
   (format stream "~a~%  [~s]~%~%" cache (type-of cache))
