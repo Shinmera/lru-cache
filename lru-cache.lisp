@@ -62,10 +62,10 @@
 
 (defun make-lru-cache (size &optional (test 'eql))
   (check-type size (integer 1))
-  (let ((head (make-lru-cache-node NIL NIL 0)))
+  (let ((head (make-lru-cache-node NIL NIL (1- size))))
     (setf (lru-cache-node-left head) head)
     (setf (lru-cache-node-right head) head)
-    (loop for i from 1 below size
+    (loop for i downfrom (- size 2) to 0
           for node = (make-lru-cache-node (lru-cache-node-left head) head i)
           do (setf (lru-cache-node-right (lru-cache-node-left head)) node)
              (setf (lru-cache-node-left head) node))
