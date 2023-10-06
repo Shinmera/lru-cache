@@ -134,10 +134,12 @@
              (setf (lru-cache-node-right l) r)
              (setf (lru-cache-node-left r) l)
              ;; Inject the node as the new head
+             (let ((tail (the lru-cache-node (lru-cache-node-left head))))
+               (setf (lru-cache-node-left node) tail)
+               (setf (lru-cache-node-right node) head)
+               (setf (lru-cache-node-right tail) node)
+               (setf (lru-cache-node-left head) node))
              (setf (lru-cache-head cache) node)
-             (setf (lru-cache-node-left node) (lru-cache-node-left head))
-             (setf (lru-cache-node-right node) head)
-             (setf (lru-cache-node-left head) node)
              #++(check-lru-cache cache :push-b)
              NIL)))))
 
