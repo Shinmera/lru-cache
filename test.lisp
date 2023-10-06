@@ -53,4 +53,10 @@
     (finish (lru-cache-resize cache 5))
     (is = 5 (lru-cache-size cache))
     (finish (lru-cache-resize cache 1))
-    (is = 1 (lru-cache-size cache))))
+    (is = 1 (lru-cache-size cache)))
+  ;; Randomised
+  (dotimes (i 10)
+    (let ((cache (make-lru-cache (random 1000))))
+      (finish (dotimes (i (random 1000)) (lru-cache-push i cache)))
+      (finish (dotimes (i (random 1000)) (lru-cache-pop i cache)))
+      (finish (do-lru-cache (e i cache))))))
