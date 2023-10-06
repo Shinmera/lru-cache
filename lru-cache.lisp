@@ -92,21 +92,22 @@
     (setf (lru-cache-size cache) size)
     cache))
 
-(defun check-lru-cache (cache)
+(defun check-lru-cache (cache &optional op)
   (let ((head (lru-cache-head cache))
         (visited (make-hash-table :test 'eq)))
     (loop for left = head then right
           for right = (lru-cache-node-right left)
           do (assert (eq left (lru-cache-node-left right)) ()
-                     "Bad back link in node:~%~a -> ~a~%~a <- ~a"
-                     left right (lru-cache-node-left right) right)
+                     "~@[After ~a: ~]Bad back link in node:~%~a -> ~a~%~a <- ~a"
+                     op left right (lru-cache-node-left right) right)
              (assert (null (gethash right visited)) ()
-                     "Bad cache cycle detected:~%~a" visited)
+                     "~@[After ~a: ~]Bad cache cycle detected:~%~a"
+                     op visited)
              (setf (gethash right visited) T)
           until (eq head right))
     (assert (= (hash-table-count visited) (lru-cache-size cache)) ()
-            "Node chain is smaller than expected:~%have ~d, should be ~d"
-            (hash-table-count visited) (lru-cache-size cache))))
+            "~@[After ~a: ~]Node chain is smaller than expected:~%have ~d, should be ~d"
+            op (hash-table-count visited) (lru-cache-size cache))))
 
 (defun lru-cache-push (value cache)
   (declare (optimize speed (safety 1)))
@@ -122,7 +123,7 @@
              (setf (lru-cache-node-value prev) value)
              (setf (lru-cache-head cache) prev)
              (setf (gethash value table) prev)
-             #++(check-lru-cache cache)
+             #++(check-lru-cache cache :push-a)
              (lru-cache-node-id prev)))
           ((eq node head)
            NIL)
@@ -137,7 +138,7 @@
              (setf (lru-cache-node-left node) (lru-cache-node-left head))
              (setf (lru-cache-node-right node) head)
              (setf (lru-cache-node-left head) node)
-             #++(check-lru-cache cache)
+             #++(check-lru-cache cache :push-b)
              NIL)))))
 
 (defun lru-cache-pop (value cache)
@@ -152,7 +153,7 @@
            (setf (lru-cache-node-value node) NIL)
            (remhash value table)
            (setf (lru-cache-head cache) (lru-cache-node-right node))
-           #++(check-lru-cache cache)
+           #++(check-lru-cache cache :pop-a)
            (lru-cache-node-id node))
           (T
            (let ((l (the lru-cache-node (lru-cache-node-left node)))
@@ -166,7 +167,7 @@
                (setf (lru-cache-node-left node) tail)
                (setf (lru-cache-node-right node) head)
                (setf (lru-cache-node-left head) node))
-             #++(check-lru-cache cache)
+             #++(check-lru-cache cache :pop-b)
              (lru-cache-node-id node))))))
 
 (defun lru-cache-evict (cache)
