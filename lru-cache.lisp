@@ -158,6 +158,8 @@
            #++(check-lru-cache cache :pop-a)
            (lru-cache-node-id node))
           (T
+           (setf (lru-cache-node-value node) NIL)
+           (remhash value table)
            (let ((l (the lru-cache-node (lru-cache-node-left node)))
                  (r (the lru-cache-node (lru-cache-node-right node))))
              ;; Fuse neighbours to remove the node
