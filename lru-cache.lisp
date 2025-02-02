@@ -17,14 +17,15 @@
 
 (in-package #:org.shirakumo.lru-cache)
 
-(defstruct (lru-cache-node
-            (:constructor make-lru-cache-node (left right id))
-            (:predicate NIL)
-            (:copier NIL))
-  (left NIL :type T)
-  (right NIL :type T)
-  (value NIL :type T)
-  (id 0 :type (unsigned-byte 32)))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defstruct (lru-cache-node
+              (:constructor make-lru-cache-node (left right id))
+              (:predicate NIL)
+              (:copier NIL))
+    (left NIL :type T)
+    (right NIL :type T)
+    (value NIL :type T)
+    (id 0 :type (unsigned-byte 32))))
 
 (defmethod print-object ((node lru-cache-node) stream)
   (print-unreadable-object (node stream :type T :identity T)
