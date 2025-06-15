@@ -11,6 +11,7 @@
    #:lru-cache-evict
    #:lru-cache-clear
    #:lru-cache-count
+   #:lru-cache-first
    #:map-lru-cache
    #:do-lru-cache
    #:lru-cache-list))
@@ -204,6 +205,13 @@
   (let ((node (gethash value (lru-cache-table cache))))
     (when node
       (lru-cache-node-id (the lru-cache-node node)))))
+
+(defun lru-cache-first (cache)
+  (declare (optimize speed (safety 1)))
+  (declare (type lru-cache cache))
+  (let ((head (lru-cache-head cache)))
+    (values (lru-cache-node-value head)
+            (lru-cache-node-id head))))
 
 (defun lru-cache-count (cache)
   (declare (optimize speed (safety 1)))

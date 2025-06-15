@@ -104,6 +104,13 @@ This operation is O(n).
 
 See LRU-CACHE")
 
+  (function lru-cache-first
+    "Returns the first element and its ID.
+
+This operation is O(1).
+
+See LRU-CACHE")
+
   (function lru-cache-count
     "Counts the number of elements currently in the cache.
 
