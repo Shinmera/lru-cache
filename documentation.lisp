@@ -103,7 +103,8 @@ See LRU-CACHE")
 This operation is O(n).
 
 After performing the operation it is guaranteed that the first pushed
-element will have the ID 0.
+element will have the ID 0 and subsequent IDs are in order as if the
+cache had been freshly constructed.
 
 See LRU-CACHE")
 
