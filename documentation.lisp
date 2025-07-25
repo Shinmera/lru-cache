@@ -102,6 +102,9 @@ See LRU-CACHE")
 
 This operation is O(n).
 
+After performing the operation it is guaranteed that the first pushed
+element will have the ID 0.
+
 See LRU-CACHE")
 
   (function lru-cache-first
