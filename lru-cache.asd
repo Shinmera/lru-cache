@@ -4,9 +4,9 @@
   :author "Yukari Hafner <shinmera@tymoon.eu>"
   :maintainer "Yukari Hafner <shinmera@tymoon.eu>"
   :description "A least-recently-used cache structure"
-  :homepage "https://shinmera.github.io/lru-cache/"
-  :bug-tracker "https://github.com/shinmera/lru-cache/issues"
-  :source-control (:git "https://github.com/shinmera/lru-cache.git")
+  :homepage "https://shinmera.com/docs/lru-cache/"
+  :bug-tracker "https://shinmera.com/project/lru-cache/issues"
+  :source-control (:git "https://shinmera.com/project/lru-cache.git")
   :serial T
   :components ((:file "lru-cache")
                (:file "documentation"))
